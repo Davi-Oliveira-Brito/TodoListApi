@@ -63,7 +63,19 @@ namespace TodoListApi.Controllers
             };
 
             var created = await _repository.CreateAsync(tarefa);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var completa = await _repository.GetByIdAsync(created.Id);
+
+            var response = new TarefaResponseDto
+            {
+                Id = completa!.Id,
+                Titulo = completa.Titulo,
+                Descricao = completa.Descricao,
+                Concluida = completa.Concluida,
+                DataInclusao = completa.DataInclusao,
+                TipoTarefaId = completa.TipoTarefaId,
+                TipoTarefaDescricao = completa.TipoTarefa?.Descricao ?? string.Empty
+            };
+            return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
         }
 
         [HttpPut("{id}")]
@@ -79,7 +91,19 @@ namespace TodoListApi.Controllers
             var updated = await _repository.UpdateAsync(id, tarefa);
             if (updated == null) return NotFound();
 
-            return Ok(updated);
+            var completa = await _repository.GetByIdAsync(updated.Id);
+
+            var response = new TarefaResponseDto
+            {
+                Id = completa!.Id,
+                Titulo = completa.Titulo,
+                Descricao = completa.Descricao,
+                Concluida = completa.Concluida,
+                DataInclusao = completa.DataInclusao,
+                TipoTarefaId = completa.TipoTarefaId,
+                TipoTarefaDescricao = completa.TipoTarefa?.Descricao ?? string.Empty
+            };
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
