@@ -13,6 +13,7 @@ API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para 
 - [Como Rodar](#como-rodar)
 - [Autenticação](#autenticação)
 - [Endpoints](#endpoints)
+- [Postman Collection](#postman-collection)
 - [Testes](#testes)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 
@@ -254,6 +255,28 @@ Cada usuário acessa apenas suas próprias tarefas.
 ```
 
 > Datas são retornadas em **UTC**. O front-end deve converter para o horário local do usuário.
+
+---
+
+## Postman Collection
+
+O repositório inclui uma collection do Postman com todos os endpoints prontos para teste.
+
+### Como importar
+
+1. Abra o Postman
+2. Clique em **Import**
+3. Selecione o arquivo `TodoListApi.postman_collection.json` na raiz do repositório
+4. Crie um environment com as variáveis:
+   - `baseUrl` → `http://localhost:5222`
+   - `bearer` → token JWT obtido no `/api/Auth/login` ou `/api/Auth/register`
+
+### Como usar
+
+1. Execute `POST /api/Auth/register` para criar uma conta
+2. Copie o token retornado no campo `token`
+3. Cole o token na variável `bearer` do environment
+4. Todos os endpoints de Tarefas já estarão autenticados automaticamente
 
 ---
 
