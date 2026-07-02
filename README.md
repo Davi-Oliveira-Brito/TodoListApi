@@ -11,6 +11,7 @@ API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para 
 - [Arquitetura](#arquitetura)
 - [Pré-requisitos](#pré-requisitos)
 - [Como Rodar](#como-rodar)
+- [Autenticação](#autenticação)
 - [Endpoints](#endpoints)
 - [Testes](#testes)
 - [Estrutura de Pastas](#estrutura-de-pastas)
@@ -19,7 +20,9 @@ API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para 
 
 ## Sobre o Projeto
 
-API construída com ASP.NET Core que permite gerenciar uma lista de tarefas (To Do List), com suporte a criação, leitura, atualização e exclusão de tarefas. Cada tarefa possui um tipo associado - **Normal** ou **Urgente** - que é pré-cadastrado no banco via Seed na migration.
+API construída com ASP.NET Core que permite gerenciar uma lista de tarefas (To Do List), com suporte a criação, leitura, atualização e exclusão de tarefas. Cada tarefa possui um tipo associado — **Normal** ou **Urgente** — que é pré-cadastrado no banco via Seed na migration.
+
+A API conta com autenticação via **JWT (JSON Web Token)**. Cada usuário gerencia apenas suas próprias tarefas — os endpoints de tarefas são protegidos e exigem um token válido.
 
 ---
 
@@ -29,6 +32,8 @@ API construída com ASP.NET Core que permite gerenciar uma lista de tarefas (To 
 - ASP.NET Core Web API
 - Entity Framework Core 10
 - SQL Server
+- JWT (JSON Web Token) — autenticação
+- BCrypt — hash de senha
 - Swagger / OpenAPI
 - xUnit (testes unitários)
 - Microsoft.EntityFrameworkCore.InMemory (banco em memória para testes)
@@ -39,15 +44,17 @@ API construída com ASP.NET Core que permite gerenciar uma lista de tarefas (To 
 
 O projeto segue uma arquitetura em camadas com responsabilidades bem definidas:
 
-**Controllers** - recebem as requisições HTTP e delegam para os Repositories. Não contêm lógica de negócio.
+**Controllers** — recebem as requisições HTTP e delegam para os Repositories. Não contêm lógica de negócio.
 
-**Repositories** - responsáveis pelo acesso ao banco de dados via Entity Framework. Implementam interfaces, facilitando testes e extensões futuras.
+**Services** — contém a lógica de autenticação (`AuthService`): geração de token JWT, hash de senha com BCrypt e validação de credenciais.
 
-**Models** - representam as entidades do banco de dados (`Tarefa` e `TipoTarefa`).
+**Repositories** — responsáveis pelo acesso ao banco de dados via Entity Framework. Implementam interfaces, facilitando testes e extensões futuras.
 
-**DTOs (Data Transfer Objects)** - separam os objetos de entrada e saída da API dos modelos internos, evitando exposição desnecessária de dados.
+**Models** — representam as entidades do banco de dados (`Tarefa`, `TipoTarefa` e `Usuario`).
 
-**Data** - contém o `AppDbContext`, responsável pela configuração do ORM, mapeamento das entidades e Seed de dados iniciais.
+**DTOs (Data Transfer Objects)** — separam os objetos de entrada e saída da API dos modelos internos, evitando exposição desnecessária de dados.
+
+**Data** — contém o `AppDbContext`, responsável pela configuração do ORM, mapeamento das entidades e Seed de dados iniciais.
 
 Essa separação garante que cada camada tenha uma única responsabilidade, tornando o código fácil de ler, manter e estender.
 
@@ -58,7 +65,7 @@ Essa separação garante que cada camada tenha uma única responsabilidade, torn
 Antes de rodar o projeto, certifique-se de ter instalado:
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [SQL Server](https://www.microsoft.com/sql-server/sql-server-downloads) (qualquer versão - Express recomendado)
+- [SQL Server](https://www.microsoft.com/sql-server/sql-server-downloads) (qualquer versão — Express recomendado)
 - dotnet-ef instalado globalmente:
 
 ```bash
@@ -78,24 +85,25 @@ cd TodoListApi
 
 ### 2. Configure a connection string
 
-Abra o arquivo `TodoListApi/appsettings.json` e ajuste a connection string com as informações do seu SQL Server:
+Abra o arquivo `TodoListApi/appsettings.json` e ajuste com as informações do seu SQL Server:
 
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=TodoListDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "TodoListApi@PWI#Sistemas$2026!SecretKey",
+    "Issuer": "TodoListApi",
+    "Audience": "TodoListApiUsers"
   }
 }
 ```
 
-Se o seu SQL Server usar autenticação por usuário e senha:
+Se o seu SQL Server usar autenticação por usuário e senha, substitua a connection string por:
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=TodoListDb;User Id=seu_usuario;Password=sua_senha;TrustServerCertificate=True;"
-  }
-}
+```
+Server=localhost;Database=TodoListDb;User Id=seu_usuario;Password=sua_senha;TrustServerCertificate=True;
 ```
 
 ### 3. Restaure as dependências
@@ -130,41 +138,106 @@ dotnet run
 Abra no navegador:
 
 ```
-https://localhost:7100/swagger
+http://localhost:5222/swagger
 ```
+
+---
+
+## Autenticação
+
+A API utiliza autenticação via JWT. Os endpoints de tarefas são protegidos e exigem um token válido no header `Authorization`.
+
+### Fluxo de autenticação
+
+**1. Crie uma conta:**
+
+```
+POST /api/Auth/register
+```
+
+```json
+{
+  "nome": "Davi Oliveira",
+  "email": "davi@email.com",
+  "senha": "123456"
+}
+```
+
+**2. Ou faça login:**
+
+```
+POST /api/Auth/login
+```
+
+```json
+{
+  "email": "davi@email.com",
+  "senha": "123456"
+}
+```
+
+**3. Use o token retornado:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "nome": "Davi Oliveira",
+  "email": "davi@email.com"
+}
+```
+
+**4. No Swagger:** clique no botão **Authorize** e cole o token.
+
+**5. Em outras ferramentas (Postman, curl):** envie o token no header:
+
+```
+Authorization: Bearer {seu_token}
+```
+
+O token expira em **8 horas**.
 
 ---
 
 ## Endpoints
 
-### Tarefas
+### Autenticação (público)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| GET | `/api/tarefas` | Lista todas as tarefas |
-| GET | `/api/tarefas/{id}` | Busca uma tarefa por ID |
-| POST | `/api/tarefas` | Cria uma nova tarefa |
-| PUT | `/api/tarefas/{id}` | Atualiza uma tarefa existente |
-| DELETE | `/api/tarefas/{id}` | Remove uma tarefa |
+| POST | `/api/Auth/register` | Cadastra um novo usuário e retorna o token |
+| POST | `/api/Auth/login` | Autentica e retorna o token |
 
-### Tipos de Tarefa
+### Tarefas (requer token JWT)
+
+Cada usuário acessa apenas suas próprias tarefas.
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| GET | `/api/tipotarefas` | Lista os tipos disponíveis (Normal / Urgente) |
-| GET | `/api/tipotarefas/{id}` | Busca um tipo por ID |
+| GET | `/api/Tarefas` | Lista todas as tarefas do usuário autenticado |
+| GET | `/api/Tarefas/{id}` | Busca uma tarefa por ID |
+| POST | `/api/Tarefas` | Cria uma nova tarefa |
+| PUT | `/api/Tarefas/{id}` | Atualiza uma tarefa existente |
+| DELETE | `/api/Tarefas/{id}` | Remove uma tarefa |
 
-### Exemplo de payload para criação de tarefa (POST /api/tarefas)
+### Tipos de Tarefa (público)
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/TipoTarefas` | Lista os tipos disponíveis (Normal / Urgente) |
+| GET | `/api/TipoTarefas/{id}` | Busca um tipo por ID |
+
+### Exemplo de payload para criação de tarefa (POST /api/Tarefas)
 
 ```json
 {
   "titulo": "Revisar documentação",
   "descricao": "Revisar o README do projeto",
-  "tipoTarefaId": 1
+  "tipoTarefaId": 1,
+  "concluida": false
 }
 ```
 
-### Exemplo de resposta (GET /api/tarefas)
+### Exemplo de resposta (GET /api/Tarefas)
 
 ```json
 [
@@ -173,18 +246,20 @@ https://localhost:7100/swagger
     "titulo": "Revisar documentação",
     "descricao": "Revisar o README do projeto",
     "concluida": false,
-    "dataInclusao": "2026-07-01T14:25:11.934503",
+    "dataInclusao": "2026-07-02T19:47:46.014Z",
     "tipoTarefaId": 1,
     "tipoTarefaDescricao": "Normal"
   }
 ]
 ```
 
+> Datas são retornadas em **UTC**. O front-end deve converter para o horário local do usuário.
+
 ---
 
 ## Testes
 
-O projeto conta com testes unitários cobrindo todos os métodos do `TarefaRepository`, utilizando banco de dados em memória (InMemory) para isolamento total do ambiente.
+O projeto conta com testes unitários cobrindo todos os métodos do `TarefaRepository`, incluindo isolamento por usuário. Utiliza banco de dados em memória (InMemory) para isolamento total do ambiente.
 
 Para rodar os testes:
 
@@ -196,18 +271,20 @@ dotnet test
 Resultado esperado:
 
 ```
-total: 7 | falhou: 0 | bem-sucedido: 7
+total: 9 | falhou: 0 | bem-sucedido: 9
 ```
 
 Casos de teste cobertos:
 
 - Criar tarefa e verificar persistência
-- Listar todas as tarefas
+- Listar tarefas — retorna apenas as do usuário autenticado
 - Buscar tarefa por ID existente
 - Buscar tarefa por ID inexistente (retorna null)
+- Buscar tarefa de outro usuário (retorna null)
 - Atualizar tarefa existente
 - Deletar tarefa existente
 - Deletar tarefa inexistente (retorna false)
+- Deletar tarefa de outro usuário (retorna false)
 
 ---
 
@@ -215,29 +292,36 @@ Casos de teste cobertos:
 
 ```
 TodoListApi/
-├── Controllers/              -> Endpoints HTTP (GET, POST, PUT, DELETE)
+├── Controllers/
+│   ├── AuthController.cs          -> Endpoints de registro e login
+│   ├── TarefasController.cs       -> CRUD de tarefas (protegido por JWT)
+│   └── TipoTarefasController.cs   -> Listagem de tipos (público)
 ├── Data/
-│   ├── AppDbContext.cs       -> Configuração do ORM e Seed de dados
-│   └── AppDbContextFactory.cs -> Factory para uso do EF em design-time
+│   ├── AppDbContext.cs            -> Configuração do ORM e Seed de dados
+│   └── AppDbContextFactory.cs     -> Factory para uso do EF em design-time
 ├── DTOs/
-│   ├── TarefaCreateDto.cs    -> Objeto de entrada (POST e PUT)
-│   └── TarefaResponseDto.cs  -> Objeto de saída (GET)
-├── Migrations/               -> Histórico de versões do banco (gerado pelo EF Core)
+│   ├── AuthDto.cs                 -> DTOs de registro, login e token
+│   ├── TarefaCreateDto.cs         -> Objeto de entrada (POST e PUT)
+│   └── TarefaResponseDto.cs       -> Objeto de saída (GET)
+├── Migrations/                    -> Histórico de versões do banco (gerado pelo EF Core)
 ├── Models/
-│   ├── Tarefa.cs             -> Entidade principal
-│   └── TipoTarefa.cs         -> Entidade de tipo (Normal / Urgente)
+│   ├── Tarefa.cs                  -> Entidade principal
+│   ├── TipoTarefa.cs              -> Entidade de tipo (Normal / Urgente)
+│   └── Usuario.cs                 -> Entidade de usuário
 ├── Repositories/
 │   ├── ITarefaRepository.cs       -> Interface do repositório de tarefas
 │   ├── TarefaRepository.cs        -> Implementação com acesso ao banco
 │   ├── ITipoTarefaRepository.cs   -> Interface do repositório de tipos
 │   └── TipoTarefaRepository.cs    -> Implementação com acesso ao banco
-├── appsettings.json          -> Configurações da aplicação
-└── Program.cs                -> Ponto de entrada e registro de dependências
+├── Services/
+│   └── AuthService.cs             -> Lógica de autenticação e geração de token
+├── appsettings.json               -> Configurações da aplicação
+└── Program.cs                     -> Ponto de entrada e registro de dependências
 
 TodoListApi.Tests/
-└── TarefaRepositoryTests.cs  -> 7 testes unitários do TarefaRepository
+└── TarefaRepositoryTests.cs       -> 9 testes unitários do TarefaRepository
 ```
 
 ---
 
-Desenvolvido por [**Davi Oliveira**](https://www.linkedin.com/in/davi-oliveira-brito-b7267b252/) 
+Desenvolvido por [**Davi Oliveira**](https://www.linkedin.com/in/davi-oliveira-brito-b7267b252/)
