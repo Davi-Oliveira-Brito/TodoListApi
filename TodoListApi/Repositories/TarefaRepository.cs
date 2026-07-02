@@ -13,14 +13,19 @@ namespace TodoListApi.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Tarefa>> GetAllAsync()
+        public async Task<IEnumerable<Tarefa>> GetAllAsync(int usuarioId)
         {
-            return await _context.Tarefas.Include(t => t.TipoTarefa).ToListAsync();
+            return await _context.Tarefas
+                .Include(t => t.TipoTarefa)
+                .Where(t => t.UsuarioId == usuarioId)
+                .ToListAsync();
         }
 
-        public async Task<Tarefa?> GetByIdAsync(int id)
+        public async Task<Tarefa?> GetByIdAsync(int id, int usuarioId)
         {
-            return await _context.Tarefas.Include(t => t.TipoTarefa).FirstOrDefaultAsync(t => t.Id == id);
+            return await _context.Tarefas
+                .Include(t => t.TipoTarefa)
+                .FirstOrDefaultAsync(t => t.Id == id && t.UsuarioId == usuarioId);
         }
 
         public async Task<Tarefa> CreateAsync(Tarefa tarefa)
@@ -30,9 +35,10 @@ namespace TodoListApi.Repositories
             return tarefa;
         }
 
-        public async Task<Tarefa?> UpdateAsync(int id, Tarefa tarefa)
+        public async Task<Tarefa?> UpdateAsync(int id, Tarefa tarefa, int usuarioId)
         {
-            var existing = await _context.Tarefas.FindAsync(id);
+            var existing = await _context.Tarefas
+                .FirstOrDefaultAsync(t => t.Id == id && t.UsuarioId == usuarioId);
             if (existing == null) return null;
 
             existing.Titulo = tarefa.Titulo;
@@ -44,9 +50,10 @@ namespace TodoListApi.Repositories
             return existing;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int usuarioId)
         {
-            var existing = await _context.Tarefas.FindAsync(id);
+            var existing = await _context.Tarefas
+                .FirstOrDefaultAsync(t => t.Id == id && t.UsuarioId == usuarioId);
             if (existing == null) return false;
 
             _context.Tarefas.Remove(existing);

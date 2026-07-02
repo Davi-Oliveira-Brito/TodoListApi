@@ -10,5 +10,8 @@
 
         public int TipoTarefaId { get; set; }
         public TipoTarefa? TipoTarefa { get; set; }
+
+        public int UsuarioId { get; set; }
+        public Usuario? Usuario { get; set; }
     }
 }

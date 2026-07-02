@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TodoListApi.DTOs;
 using TodoListApi.Models;
 using TodoListApi.Repositories;
 
 namespace TodoListApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TarefasController : ControllerBase
@@ -16,10 +19,16 @@ namespace TodoListApi.Controllers
             _repository = repository;
         }
 
+        private int GetUsuarioId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.Parse(claim!);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var tarefas = await _repository.GetAllAsync();
+            var tarefas = await _repository.GetAllAsync(GetUsuarioId());
             var response = tarefas.Select(t => new TarefaResponseDto
             {
                 Id = t.Id,
@@ -36,7 +45,7 @@ namespace TodoListApi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var tarefa = await _repository.GetByIdAsync(id);
+            var tarefa = await _repository.GetByIdAsync(id, GetUsuarioId());
             if (tarefa == null) return NotFound();
 
             var response = new TarefaResponseDto
@@ -59,23 +68,23 @@ namespace TodoListApi.Controllers
             {
                 Titulo = dto.Titulo,
                 Descricao = dto.Descricao,
-                TipoTarefaId = dto.TipoTarefaId
+                TipoTarefaId = dto.TipoTarefaId,
+                Concluida = dto.Concluida,
+                UsuarioId = GetUsuarioId()
             };
 
             var created = await _repository.CreateAsync(tarefa);
-            var completa = await _repository.GetByIdAsync(created.Id);
-
             var response = new TarefaResponseDto
             {
-                Id = completa!.Id,
-                Titulo = completa.Titulo,
-                Descricao = completa.Descricao,
-                Concluida = completa.Concluida,
-                DataInclusao = completa.DataInclusao,
-                TipoTarefaId = completa.TipoTarefaId,
-                TipoTarefaDescricao = completa.TipoTarefa?.Descricao ?? string.Empty
+                Id = created.Id,
+                Titulo = created.Titulo,
+                Descricao = created.Descricao,
+                Concluida = created.Concluida,
+                DataInclusao = created.DataInclusao,
+                TipoTarefaId = created.TipoTarefaId,
+                TipoTarefaDescricao = created.TipoTarefa?.Descricao ?? string.Empty
             };
-            return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }
 
         [HttpPut("{id}")]
@@ -85,23 +94,22 @@ namespace TodoListApi.Controllers
             {
                 Titulo = dto.Titulo,
                 Descricao = dto.Descricao,
-                TipoTarefaId = dto.TipoTarefaId
+                TipoTarefaId = dto.TipoTarefaId,
+                Concluida = dto.Concluida
             };
 
-            var updated = await _repository.UpdateAsync(id, tarefa);
+            var updated = await _repository.UpdateAsync(id, tarefa, GetUsuarioId());
             if (updated == null) return NotFound();
-
-            var completa = await _repository.GetByIdAsync(updated.Id);
 
             var response = new TarefaResponseDto
             {
-                Id = completa!.Id,
-                Titulo = completa.Titulo,
-                Descricao = completa.Descricao,
-                Concluida = completa.Concluida,
-                DataInclusao = completa.DataInclusao,
-                TipoTarefaId = completa.TipoTarefaId,
-                TipoTarefaDescricao = completa.TipoTarefa?.Descricao ?? string.Empty
+                Id = updated.Id,
+                Titulo = updated.Titulo,
+                Descricao = updated.Descricao,
+                Concluida = updated.Concluida,
+                DataInclusao = updated.DataInclusao,
+                TipoTarefaId = updated.TipoTarefaId,
+                TipoTarefaDescricao = updated.TipoTarefa?.Descricao ?? string.Empty
             };
             return Ok(response);
         }
@@ -109,7 +117,7 @@ namespace TodoListApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _repository.DeleteAsync(id);
+            var deleted = await _repository.DeleteAsync(id, GetUsuarioId());
             if (!deleted) return NotFound();
 
             return NoContent();
