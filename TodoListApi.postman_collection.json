@@ -17,6 +17,22 @@
               "item": [
                 {
                   "name": "/api/Auth/register",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "const json = pm.response.json();\r",
+                          "if (json.token) {\r",
+                          "    pm.collectionVariables.set(\"bearerToken\", json.token);\r",
+                          "}"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
                   "request": {
                     "method": "POST",
                     "header": [
@@ -27,7 +43,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"nome\": \"string\",\n  \"email\": \"string\",\n  \"senha\": \"string\"\n}",
+                      "raw": "{\n  \"nome\": \"Davi\",\n  \"email\": \"davi@teste.com\",\n  \"senha\": \"1234\"\n}",
                       "options": {
                         "raw": {
                           "headerFamily": "json",
@@ -101,6 +117,22 @@
               "item": [
                 {
                   "name": "/api/Auth/login",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "const json = pm.response.json();\r",
+                          "if (json.token) {\r",
+                          "    pm.collectionVariables.set(\"bearerToken\", json.token);\r",
+                          "}"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
                   "request": {
                     "method": "POST",
                     "header": [
@@ -111,7 +143,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"email\": \"string\",\n  \"senha\": \"string\"\n}",
+                      "raw": "{\n  \"email\": \"davi@teste.com\",\n  \"senha\": \"1234\"\n}",
                       "options": {
                         "raw": {
                           "headerFamily": "json",
@@ -191,6 +223,16 @@
                 {
                   "name": "/api/Tarefas/:id",
                   "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
                     "method": "GET",
                     "header": [],
                     "url": {
@@ -206,7 +248,7 @@
                       "variable": [
                         {
                           "key": "id",
-                          "value": "6953"
+                          "value": "1"
                         }
                       ]
                     }
@@ -253,6 +295,16 @@
                 {
                   "name": "/api/Tarefas/:id",
                   "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
                     "method": "PUT",
                     "header": [
                       {
@@ -262,7 +314,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"titulo\": \"string\",\n  \"descricao\": \"string\",\n  \"tipoTarefaId\": 2805,\n  \"concluida\": false\n}",
+                      "raw": "{\n  \"titulo\": \"Estudar Entity Framework\",\n  \"descricao\": \"Revisar migrations e seed data\",\n  \"tipoTarefaId\": 2,\n  \"concluida\": true\n}",
                       "options": {
                         "raw": {
                           "headerFamily": "json",
@@ -283,7 +335,7 @@
                       "variable": [
                         {
                           "key": "id",
-                          "value": "6953"
+                          "value": "1"
                         }
                       ]
                     }
@@ -344,6 +396,16 @@
                 {
                   "name": "/api/Tarefas/:id",
                   "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
                     "method": "DELETE",
                     "header": [],
                     "url": {
@@ -359,7 +421,7 @@
                       "variable": [
                         {
                           "key": "id",
-                          "value": "6953"
+                          "value": "1"
                         }
                       ]
                     }
@@ -407,9 +469,31 @@
             },
             {
               "name": "/api/Tarefas",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
               "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
                 "method": "GET",
                 "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
                   "raw": "{{baseUrl}}/api/Tarefas",
                   "host": [
@@ -456,6 +540,16 @@
             {
               "name": "/api/Tarefas",
               "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
                 "method": "POST",
                 "header": [
                   {
@@ -465,7 +559,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"titulo\": \"string\",\n  \"descricao\": \"string\",\n  \"tipoTarefaId\": 2805,\n  \"concluida\": false\n}",
+                  "raw": "{\n  \"titulo\": \"Estudar Entity Framework\",\n  \"descricao\": \"Revisar migrations e seed data\",\n  \"tipoTarefaId\": 1,\n  \"concluida\": false\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -556,7 +650,7 @@
                       "variable": [
                         {
                           "key": "id",
-                          "value": "6953"
+                          "value": "1"
                         }
                       ]
                     }
@@ -692,7 +786,11 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "/"
+      "value": "http://localhost:5222"
+    },
+    {
+      "key": "bearerToken",
+      "secret": true
     }
   ]
 }
