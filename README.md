@@ -1,6 +1,10 @@
 # TodoListApi
 
+🎥 [Assista à demonstração em vídeo](https://youtu.be/xSI3pPvKvW0)
+
 API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para a vaga de Desenvolvedor C# na **PWI Sistemas**.
+
+Front-end: [TodoListFront](https://github.com/Davi-Oliveira-Brito/TodoListFront)
 
 ---
 
@@ -24,6 +28,8 @@ API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para 
 API construída com ASP.NET Core que permite gerenciar uma lista de tarefas (To Do List), com suporte a criação, leitura, atualização e exclusão de tarefas. Cada tarefa possui um tipo associado — **Normal** ou **Urgente** — que é pré-cadastrado no banco via Seed na migration.
 
 A API conta com autenticação via **JWT (JSON Web Token)**. Cada usuário gerencia apenas suas próprias tarefas — os endpoints de tarefas são protegidos e exigem um token válido.
+
+A API tem CORS habilitado para `http://localhost:3000`, permitindo o consumo direto pelo [front-end](https://github.com/Davi-Oliveira-Brito/TodoListFront) local.
 
 ---
 
@@ -267,16 +273,14 @@ O repositório inclui uma collection do Postman com todos os endpoints prontos p
 1. Abra o Postman
 2. Clique em **Import**
 3. Selecione o arquivo `TodoListApi.postman_collection.json` na raiz do repositório
-4. Crie um environment com as variáveis:
-   - `baseUrl` → `http://localhost:5222`
-   - `bearer` → token JWT obtido no `/api/Auth/login` ou `/api/Auth/register`
+
+A collection já vem com a variável `baseUrl` (`http://localhost:5222`) configurada — não é necessário criar um environment.
 
 ### Como usar
 
-1. Execute `POST /api/Auth/register` para criar uma conta
-2. Copie o token retornado no campo `token`
-3. Cole o token na variável `bearer` do environment
-4. Todos os endpoints de Tarefas já estarão autenticados automaticamente
+1. Dê **Send** em `POST /api/Auth/register` (ou `/api/Auth/login`)
+2. Um script de teste captura o token da resposta e preenche automaticamente a variável de collection `bearerToken` — sem precisar copiar ou colar nada
+3. Todos os endpoints de Tarefas já estarão autenticados automaticamente, pois usam `{{bearerToken}}` como Bearer Token
 
 ---
 
@@ -347,4 +351,4 @@ TodoListApi.Tests/
 
 ---
 
-Desenvolvido por [**Davi Oliveira**](https://www.linkedin.com/in/davi-oliveira-brito-b7267b252/)
+Desenvolvido por [**Davi Oliveira Brito**](https://www.linkedin.com/in/davi-oliveira-brito-b7267b252/)
