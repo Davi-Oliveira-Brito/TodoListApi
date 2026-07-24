@@ -2,7 +2,7 @@
 
 🎥 [Assista à demonstração em vídeo](https://youtu.be/xSI3pPvKvW0)
 
-API RESTful de gerenciamento de tarefas desenvolvida como desafio técnico para a vaga de Desenvolvedor C# na **PWI Sistemas**.
+API RESTful de gerenciamento de tarefas
 
 Front-end: [TodoListFront](https://github.com/Davi-Oliveira-Brito/TodoListFront)
 
@@ -100,7 +100,7 @@ Abra o arquivo `TodoListApi/appsettings.json` e ajuste com as informações do s
     "DefaultConnection": "Server=localhost;Database=TodoListDb;Trusted_Connection=True;TrustServerCertificate=True;"
   },
   "Jwt": {
-    "Key": "TodoListApi@PWI#Sistemas$2026!SecretKey",
+    "Key": "TodoListApi@DEV#Sistemas$2026!SecretKey",
     "Issuer": "TodoListApi",
     "Audience": "TodoListApiUsers"
   }
